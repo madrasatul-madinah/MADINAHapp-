@@ -10,18 +10,37 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
+      - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: Build Web App
+      - name: Install Dependencies
         run: |
-          npm install --legacy-peer-deps || true
+          npm install --legacy-peer-deps
 
-      - name: Packaging Info
-        run: echo "বিল্ড প্রক্রিয়া সম্পন্ন হয়েছে।"
-        
+      - name: Prebuild Native Android
+        run: |
+          npx expo prebuild --platform android --no-install
+
+      - name: Build APK via Gradle
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK File
+        uses: actions/upload-artifact@v4
+        with:
+          name: Madrasatul-Madinah-App
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          
